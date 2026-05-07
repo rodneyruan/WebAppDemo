@@ -12,26 +12,51 @@ export default function DashboardPage() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [prompt, setPrompt] = useState("");
   const [error, setError] = useState("");
+  const [accountLoading, setAccountLoading] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let active = true;
+
     async function load() {
+      setError("");
+
       try {
         const {
           data: { user: authUser }
         } = await supabase.auth.getUser();
+
         if (!authUser) {
-          router.push("/login");
+          router.replace("/login");
           return;
         }
+
         const [profile, existingImages] = await Promise.all([api.me(), api.listImages()]);
+
+        if (!active) {
+          return;
+        }
+
         setUser(profile);
         setImages(existingImages);
-      } catch {
-        router.push("/login");
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+
+        setError(err instanceof Error ? err.message : "Could not load your account.");
+      } finally {
+        if (active) {
+          setAccountLoading(false);
+        }
       }
     }
+
     load();
+
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -73,7 +98,7 @@ export default function DashboardPage() {
       <div className="actions" style={{ justifyContent: "space-between", marginTop: 0 }}>
         <div>
           <h1>Create images</h1>
-          <p className="muted">{user ? user.email : "Loading account..."}</p>
+          <p className="muted">{user ? user.email : accountLoading ? "Loading account..." : "Signed in"}</p>
         </div>
         <button className="button secondary" onClick={logout} type="button">
           <LogOut size={18} />
@@ -100,7 +125,7 @@ export default function DashboardPage() {
               <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} required placeholder="A cinematic product photo of..." />
             </label>
             {error ? <p className="error">{error}</p> : null}
-            <button className="button accent" disabled={loading || !user} type="submit">
+            <button className="button accent" disabled={loading || !user || accountLoading} type="submit">
               <ImagePlus size={18} />
               {loading ? "Generating..." : "Generate"}
             </button>
