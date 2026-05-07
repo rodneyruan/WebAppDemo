@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.database import Base, engine
-from app.routers import auth, billing, images, users
+from app.routers import billing, images, users
 
 settings = get_settings()
 
@@ -19,7 +19,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(images.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
@@ -28,4 +27,3 @@ app.include_router(billing.router, prefix="/api")
 @app.get("/health")
 def health():
     return {"ok": True}
-

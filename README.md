@@ -4,8 +4,8 @@ Fullstack starter app with:
 
 - Next.js frontend
 - FastAPI backend
-- Email/password login
-- JWT auth
+- Supabase Auth
+- Supabase Postgres
 - 5 free image generations per user
 - OpenAI image generation
 - Stripe subscription checkout and webhook credit reset
@@ -45,9 +45,9 @@ uvicorn app.main:app --reload --port 8000
 
 ```bash
 cd frontend
-npm install
+npm.cmd install
 copy .env.example .env.local
-npm run dev
+npm.cmd run dev
 ```
 
 Open http://localhost:3000.
@@ -78,13 +78,59 @@ Copy the webhook signing secret into `backend/.env` as `STRIPE_WEBHOOK_SECRET`.
 
 Backend:
 
-- `SECRET_KEY`
+- `DATABASE_URL`
 - `OPENAI_API_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_PRICE_ID`
 - `STRIPE_WEBHOOK_SECRET`
 - `FRONTEND_URL`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
 Frontend:
 
 - `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+## Railway + Supabase
+
+Production setup for this project:
+
+- Deploy `frontend` to Vercel
+- Deploy `backend` to Railway
+- Use Supabase Postgres for `DATABASE_URL`
+- Use Supabase Auth for user sign-in
+
+For Supabase database connections, use the project connection string from the dashboard. For a persistent backend like Railway, Supabase recommends the pooler session mode when you need broad network compatibility.
+
+Railway backend settings:
+
+- Root directory: `backend`
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+Backend env on Railway:
+
+```env
+DATABASE_URL=postgresql+psycopg://...
+FRONTEND_URL=https://your-frontend.vercel.app
+OPENAI_API_KEY=
+OPENAI_IMAGE_MODEL=gpt-image-1
+STRIPE_SECRET_KEY=
+STRIPE_PRICE_ID=
+STRIPE_WEBHOOK_SECRET=
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Frontend env on Vercel:
+
+```env
+NEXT_PUBLIC_API_URL=https://your-railway-service.up.railway.app/api
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+If you already created a local `app.db` with the old integer user schema, remove it before running the refactored local backend so SQLAlchemy can create the new Supabase-compatible tables.

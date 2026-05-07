@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, UserPlus } from "lucide-react";
-import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,17 +11,34 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setMessage("");
     setLoading(true);
 
     try {
-      const result = mode === "login" ? await api.login(email, password) : await api.register(email, password);
-      localStorage.setItem("token", result.access_token);
-      router.push("/dashboard");
+      if (mode === "login") {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          throw signInError;
+        }
+        router.push("/dashboard");
+      } else {
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        if (signUpError) {
+          throw signUpError;
+        }
+
+        if (data.session) {
+          router.push("/dashboard");
+        } else {
+          setMessage("Account created. Check your email to confirm the account, then log in.");
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -44,6 +61,7 @@ export default function LoginPage() {
             <input autoComplete="current-password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} required type="password" />
           </label>
           {error ? <p className="error">{error}</p> : null}
+          {message ? <p className="muted">{message}</p> : null}
           <button className="button accent" disabled={loading} type="submit">
             {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
             {loading ? "Working..." : mode === "login" ? "Login" : "Register"}
@@ -58,4 +76,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

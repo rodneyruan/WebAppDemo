@@ -24,7 +24,7 @@ def create_checkout_session(
 
     customer_id = current_user.stripe_customer_id
     if not customer_id:
-        customer = stripe.Customer.create(email=current_user.email, metadata={"user_id": str(current_user.id)})
+        customer = stripe.Customer.create(email=current_user.email, metadata={"user_id": current_user.id})
         customer_id = customer.id
         current_user.stripe_customer_id = customer_id
         db.add(current_user)
@@ -36,7 +36,7 @@ def create_checkout_session(
         line_items=[{"price": settings.stripe_price_id, "quantity": 1}],
         success_url=f"{settings.frontend_url}/dashboard?subscribed=1",
         cancel_url=f"{settings.frontend_url}/pricing?canceled=1",
-        metadata={"user_id": str(current_user.id)},
+        metadata={"user_id": current_user.id},
     )
     return {"checkout_url": session.url}
 
@@ -65,7 +65,7 @@ async def stripe_webhook(
     if event_type == "checkout.session.completed":
         user_id = data.get("metadata", {}).get("user_id")
         if user_id:
-            user = db.get(User, int(user_id))
+            user = db.get(User, user_id)
             if user:
                 user.is_subscribed = True
                 db.add(user)
@@ -81,4 +81,3 @@ async def stripe_webhook(
             db.commit()
 
     return {"received": True}
-

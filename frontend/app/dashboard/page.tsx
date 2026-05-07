@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard, ImagePlus, LogOut, Sparkles } from "lucide-react";
 import { api, GeneratedImage, User } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,6 +17,13 @@ export default function DashboardPage() {
   useEffect(() => {
     async function load() {
       try {
+        const {
+          data: { user: authUser }
+        } = await supabase.auth.getUser();
+        if (!authUser) {
+          router.push("/login");
+          return;
+        }
         const [profile, existingImages] = await Promise.all([api.me(), api.listImages()]);
         setUser(profile);
         setImages(existingImages);
@@ -55,8 +63,9 @@ export default function DashboardPage() {
   }
 
   function logout() {
-    localStorage.removeItem("token");
-    router.push("/");
+    supabase.auth.signOut().finally(() => {
+      router.push("/");
+    });
   }
 
   return (
