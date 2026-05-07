@@ -5,12 +5,17 @@ from app.core.config import get_settings
 from app.routers import billing, images, users
 
 settings = get_settings()
+allowed_origins = [
+    origin.strip().rstrip("/")
+    for origin in settings.frontend_url.split(",")
+    if origin.strip()
+]
 
 app = FastAPI(title=settings.app_name)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url.rstrip("/")],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

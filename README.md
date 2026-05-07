@@ -85,6 +85,7 @@ Backend:
 - `STRIPE_PRICE_ID`
 - `STRIPE_WEBHOOK_SECRET`
 - `FRONTEND_URL`
+  Comma-separated allowed frontend origins, for example `http://localhost:3000,https://your-site.vercel.app`
 - `SUPABASE_URL`
 - `SUPABASE_KEY`
 
@@ -114,7 +115,7 @@ Railway backend settings:
 Backend env on Railway:
 
 ```env
-FRONTEND_URL=https://your-frontend.vercel.app
+FRONTEND_URL=http://localhost:3000,https://your-frontend.vercel.app
 OPENAI_API_KEY=
 OPENAI_IMAGE_MODEL=gpt-image-1
 STRIPE_SECRET_KEY=
