@@ -1,26 +1,12 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from supabase import Client, create_client
 
-from app.core.config import get_settings
-from app.database import get_db
-from app.models import User
+from app.supabase_client import get_request_supabase_client, get_supabase_client
 
-settings = get_settings()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/users/me")
 
 
-def get_supabase_admin_client() -> Client:
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Supabase is not configured",
-        )
-    return create_client(settings.supabase_url, settings.supabase_service_role_key)
-
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate Supabase session",
@@ -28,7 +14,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
 
     try:
-        supabase = get_supabase_admin_client()
+        supabase = get_supabase_client()
         auth_response = supabase.auth.get_user(token)
         auth_user = auth_response.user
     except Exception as exc:
@@ -37,19 +23,24 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if auth_user is None or auth_user.id is None or auth_user.email is None:
         raise credentials_exception
 
-    user = db.get(User, auth_user.id)
-    if user is None:
-        user = User(id=auth_user.id, email=auth_user.email.lower(), credits=5)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
-
     normalized_email = auth_user.email.lower()
-    if user.email != normalized_email:
-        user.email = normalized_email
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    scoped_client = get_request_supabase_client(token)
+    response = scoped_client.table("users").select("*").eq("id", auth_user.id).limit(1).execute()
+    existing_user = response.data[0] if response.data else None
 
-    return user
+    if existing_user is None:
+        created = (
+            scoped_client.table("users")
+            .insert({"id": auth_user.id, "email": normalized_email, "credits": 5, "is_subscribed": False})
+            .execute()
+        )
+        if not created.data:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not create user profile")
+        return created.data[0]
+
+    if existing_user.get("email") != normalized_email:
+        updated = scoped_client.table("users").update({"email": normalized_email}).eq("id", auth_user.id).execute()
+        if updated.data:
+            return updated.data[0]
+
+    return existing_user

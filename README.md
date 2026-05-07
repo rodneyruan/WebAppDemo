@@ -5,7 +5,7 @@ Fullstack starter app with:
 - Next.js frontend
 - FastAPI backend
 - Supabase Auth
-- Supabase Postgres
+- Supabase Data API
 - 5 free image generations per user
 - OpenAI image generation
 - Stripe subscription checkout and webhook credit reset
@@ -40,6 +40,8 @@ pip install -r requirements.txt
 copy .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
+
+Before starting the backend the first time, run [backend/supabase_schema.sql](</C:/Users/11556/Documents/New project 2/backend/supabase_schema.sql>) in the Supabase SQL Editor. The backend now talks to Supabase through the Python client, so it does not auto-create tables anymore.
 
 ## Frontend Setup
 
@@ -78,14 +80,13 @@ Copy the webhook signing secret into `backend/.env` as `STRIPE_WEBHOOK_SECRET`.
 
 Backend:
 
-- `DATABASE_URL`
 - `OPENAI_API_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_PRICE_ID`
 - `STRIPE_WEBHOOK_SECRET`
 - `FRONTEND_URL`
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_KEY`
 
 Frontend:
 
@@ -99,10 +100,10 @@ Production setup for this project:
 
 - Deploy `frontend` to Vercel
 - Deploy `backend` to Railway
-- Use Supabase Postgres for `DATABASE_URL`
 - Use Supabase Auth for user sign-in
+- Use Supabase tables plus RLS for app data
 
-For Supabase database connections, use the project connection string from the dashboard. For a persistent backend like Railway, Supabase recommends the pooler session mode when you need broad network compatibility.
+This backend uses the Supabase Python client with `SUPABASE_URL` and `SUPABASE_KEY`, matching the Flask-style client pattern from the official Supabase Python docs.
 
 Railway backend settings:
 
@@ -113,7 +114,6 @@ Railway backend settings:
 Backend env on Railway:
 
 ```env
-DATABASE_URL=postgresql+psycopg://...
 FRONTEND_URL=https://your-frontend.vercel.app
 OPENAI_API_KEY=
 OPENAI_IMAGE_MODEL=gpt-image-1
@@ -121,9 +121,10 @@ STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
 STRIPE_WEBHOOK_SECRET=
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_KEY=sb_publishable_or_sb_secret_key
 ```
+
+Use `sb_publishable_...` when you want the backend to operate with user-scoped RLS only. Use `sb_secret_...` if you also want server-side webhook updates such as Stripe subscription status changes.
 
 Frontend env on Vercel:
 
@@ -132,5 +133,3 @@ NEXT_PUBLIC_API_URL=https://your-railway-service.up.railway.app/api
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
-
-If you already created a local `app.db` with the old integer user schema, remove it before running the refactored local backend so SQLAlchemy can create the new Supabase-compatible tables.
