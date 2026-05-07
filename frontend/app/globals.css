@@ -237,6 +237,22 @@ textarea {
   font-size: 14px;
 }
 
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.link-button {
+  background: transparent;
+  border: 0;
+  color: var(--accent-strong);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .pricing-card {
   max-width: 480px;
 }
@@ -251,4 +267,3 @@ textarea {
     min-height: auto;
   }
 }
-
