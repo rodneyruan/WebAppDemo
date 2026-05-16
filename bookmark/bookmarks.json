@@ -1,0 +1,42 @@
+[
+  {
+    "category": "Search",
+    "items": [
+      {
+        "title": "Google",
+        "url": "https://www.google.com",
+        "description": "General web search."
+      },
+      {
+        "title": "DuckDuckGo",
+        "url": "https://duckduckgo.com",
+        "description": "Privacy-focused search engine."
+      }
+    ]
+  },
+  {
+    "category": "Development",
+    "items": [
+      {
+        "title": "MDN Web Docs",
+        "url": "https://developer.mozilla.org",
+        "description": "Reference documentation for web standards."
+      },
+      {
+        "title": "GitHub",
+        "url": "https://github.com",
+        "description": "Code hosting and collaboration."
+      }
+    ]
+  },
+  {
+    "category": "News",
+    "items": [
+      {
+        "title": "BBC",
+        "url": "https://www.bbc.com/news",
+        "description": "International news coverage."
+      }
+    ]
+  }
+]
