@@ -1,11 +1,21 @@
 [
   {
-    "category": "Search",
+    "category": "Tools",
     "items": [
       {
-        "title": "Google",
-        "url": "https://www.google.com",
-        "description": "General web search."
+        "title": "金山词霸",
+        "url": "https://www.iciba.com/word?w=hello",
+        "description": "在线查单词."
+      }
+    ]
+  },
+  {
+    "category": "个人常用",
+    "items": [
+      {
+        "title": "GitHub RodneyRuan",
+        "url": "https://github.com/rodneyruan",
+        "description": "个人的GitHub"
       },
       {
         "title": "DuckDuckGo",
